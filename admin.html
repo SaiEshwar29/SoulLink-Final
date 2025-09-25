@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoulLink - Admin Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 bg-white/80 backdrop-blur-md shadow-sm z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-sky-600 rounded-full flex items-center justify-center">
+                        <i data-lucide="heart" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-slate-800">SoulLink Admin Portal</h1>
+                </div>
+                
+                <!-- Logout Button -->
+                <div class="flex items-center space-x-4">
+                    <a href="./login.html" class="bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <!-- Page Title -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-slate-800">Admin Dashboard: Student Wellness Overview</h1>
+        </div>
+
+        <!-- Key Metrics Cards -->
+        <section class="mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Total Active Students -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-600">Total Active Students</p>
+                            <p class="text-3xl font-bold text-slate-800">1,284</p>
+                            <p class="text-sm text-green-600 flex items-center mt-1">
+                                <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                +5% this month
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i data-lucide="users" class="w-6 h-6 text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointments Booked -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-600">Appointments Booked (Month)</p>
+                            <p class="text-3xl font-bold text-slate-800">212</p>
+                            <p class="text-sm text-green-600 flex items-center mt-1">
+                                <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                +12% this month
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i data-lucide="calendar" class="w-6 h-6 text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Average Mood Score -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-slate-600">Average Mood Score</p>
+                            <p class="text-3xl font-bold text-slate-800">8.3 / 10</p>
+                            <p class="text-sm text-green-600 flex items-center mt-1">
+                                <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                                +0.2 this month
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i data-lucide="smile" class="w-6 h-6 text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="mb-12">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Monthly Wellness Scores -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Monthly Wellness Scores</h3>
+                    <canvas id="wellnessChart" width="400" height="300"></canvas>
+                </div>
+
+                <!-- Platform Engagement -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Platform Engagement</h3>
+                    <canvas id="engagementChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Additional Analytics -->
+        <section>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Top Resources Accessed -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Top Resources Accessed</h3>
+                    <canvas id="resourcesChart" width="400" height="300"></canvas>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-slate-800 mb-4">Recent Activity</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <i data-lucide="user-plus" class="w-4 h-4 text-green-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-slate-800">New student registration</p>
+                                <p class="text-xs text-slate-500">student@example.com</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i data-lucide="calendar" class="w-4 h-4 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-slate-800">Dr. Anya Sharma confirmed 3 new appointments</p>
+                                <p class="text-xs text-slate-500">2 hours ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                <i data-lucide="message-circle" class="w-4 h-4 text-purple-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-slate-800">High traffic reported in the Peer Support Forum</p>
+                                <p class="text-xs text-slate-500">4 hours ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
+                            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                                <i data-lucide="trending-up" class="w-4 h-4 text-orange-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-slate-800">Wellness scores improved by 15% this week</p>
+                                <p class="text-xs text-slate-500">6 hours ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-slate-500">
+            <p>&copy; 2025 SoulLink. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Initialize charts when page loads
+        window.addEventListener('load', function() {
+            createWellnessChart();
+            createEngagementChart();
+            createResourcesChart();
+        });
+
+        function createWellnessChart() {
+            const ctx = document.getElementById('wellnessChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Avg. Score',
+                        data: [7.1, 7.5, 7.8, 8.2, 8.5, 8.3],
+                        backgroundColor: 'rgba(14, 165, 233, 0.8)',
+                        borderColor: 'rgba(14, 165, 233, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            ticks: {
+                                stepSize: 2
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function createEngagementChart() {
+            const ctx = document.getElementById('engagementChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                    datasets: [{
+                        label: 'Check-ins',
+                        data: [120, 100, 150, 180, 220, 200],
+                        borderColor: 'rgba(14, 165, 233, 1)',
+                        backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Sessions Booked',
+                        data: [25, 30, 35, 40, 45, 38],
+                        borderColor: 'rgba(251, 191, 36, 1)',
+                        backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createResourcesChart() {
+            const ctx = document.getElementById('resourcesChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Meditation Guides', 'Anxiety Articles', 'Peer Forum', 'Therapist Booking'],
+                    datasets: [{
+                        data: [35, 25, 20, 20],
+                        backgroundColor: [
+                            'rgba(14, 165, 233, 0.8)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(99, 102, 241, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(14, 165, 233, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(99, 102, 241, 1)',
+                            'rgba(139, 92, 246, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
