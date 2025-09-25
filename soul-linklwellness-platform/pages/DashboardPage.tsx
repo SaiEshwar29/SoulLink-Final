@@ -2,14 +2,21 @@
 import React, { useEffect } from 'react';
 import Logo from '../components/Logo';
 import Icon from '../components/Icon';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useUser } from '../hooks/useUser';
+import { supabase } from '../components/supabaseClient';
 
 declare const lucide: any;
 
 const DashboardPage: React.FC = () => {
   const { user } = useUser();
+  const navigate = useNavigate();
   const firstName = user?.name.split(' ')[0] || 'User';
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
   
   useEffect(() => {
     if (typeof lucide !== 'undefined') {
@@ -36,9 +43,9 @@ const DashboardPage: React.FC = () => {
               <Link to="/profile" className="font-medium text-slate-600 hover:text-sky-600">Profile</Link>
             </nav>
             <div className="flex items-center space-x-4">
-                <Link to="/" className="bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">
+                <button onClick={handleLogout} className="bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">
                 Logout
-                </Link>
+                </button>
             </div>
           </div>
         </div>
@@ -56,9 +63,9 @@ const DashboardPage: React.FC = () => {
                     <h2 className="text-3xl font-bold text-sky-900">Aastha Wellness Hub</h2>
                     <p className="mt-3 text-sky-800/80">Your personal AI-powered companion, Aastha, is here to listen and provide guidance 24/7. Start a conversation whenever you need to talk.</p>
                 </div>
-                <button className="bg-sky-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-sky-700 transition-transform hover:scale-105 transform">
+                <Link to="/aastha" className="bg-sky-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg hover:bg-sky-700 transition-transform hover:scale-105 transform inline-block">
                     Chat with Aastha
-                </button>
+                </Link>
             </div>
         </section>
 
