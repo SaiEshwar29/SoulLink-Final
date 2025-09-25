@@ -6,6 +6,38 @@
     <title>Login / Sign Up</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .role-selection {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        .role-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        .role-option:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+        .role-option input[type="radio"] {
+            margin: 0;
+        }
+        .role-option input[type="radio"]:checked + span {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+        .role-option:has(input[type="radio"]:checked) {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
 </head>
 <body>
     <header class="navbar">
@@ -37,6 +69,22 @@
 
             <form id="login-form" class="auth-form">
                 <h2>Login</h2>
+                
+                <!-- Role Selection -->
+                <div class="input-group">
+                    <label>Select Role:</label>
+                    <div class="role-selection">
+                        <label class="role-option">
+                            <input type="radio" name="login-role" value="student" checked>
+                            <span>Student</span>
+                        </label>
+                        <label class="role-option">
+                            <input type="radio" name="login-role" value="admin">
+                            <span>Admin</span>
+                        </label>
+                    </div>
+                </div>
+                
                 <div class="input-group">
                     <input type="email" id="login-email" placeholder="Email" required>
                 </div>
@@ -48,6 +96,21 @@
 
             <form id="signup-form" class="auth-form">
                 <h2>Sign Up</h2>
+                
+                <!-- Role Selection -->
+                <div class="input-group">
+                    <label>Select Role:</label>
+                    <div class="role-selection">
+                        <label class="role-option">
+                            <input type="radio" name="signup-role" value="student" checked>
+                            <span>Student</span>
+                        </label>
+                        <label class="role-option">
+                            <input type="radio" name="signup-role" value="admin">
+                            <span>Admin</span>
+                        </label>
+                    </div>
+                </div>
                 
                 <div class="input-group">
                     <input type="text" id="signup-name" placeholder="Full Name" required>

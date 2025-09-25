@@ -21,11 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (googleLoginBtn) {
             googleLoginBtn.addEventListener('click', async () => {
+                // Get the selected role (default to student if none selected)
+                const selectedRole = document.querySelector('input[name="login-role"]:checked')?.value || 
+                                   document.querySelector('input[name="signup-role"]:checked')?.value || 
+                                   'student';
+                
                 // This one function handles the entire Google login process
                 const { error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
                     options: {
-                        redirectTo: window.location.origin + '/checkin.html'
+                        redirectTo: window.location.origin + '/auth.html',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        }
                     }
                 });
         
@@ -187,11 +196,18 @@ if (signupForm) {
         const name = signupForm.querySelector('#signup-name')?.value;
         const email = signupForm.querySelector('#signup-email').value;
         const password = signupForm.querySelector('#signup-password').value;
+        const role = signupForm.querySelector('input[name="signup-role"]:checked')?.value || 'student';
 
         const { data, error } = await supabaseClient.auth.signUp({
             email,
             password,
-            options: { data: { username: name } }
+            options: { 
+                data: { 
+                    username: name,
+                    full_name: name,
+                    role: role
+                } 
+            }
         });
 
         if (error) {
@@ -208,6 +224,14 @@ if (signupForm) {
                 // This is a brand new user.
                 formStatus.textContent = 'Success! Please check your email for a confirmation link.';
                 formStatus.style.color = 'green';
+                
+                // Store user data for onboarding
+                localStorage.setItem('newUser', JSON.stringify({ 
+                    name, 
+                    email, 
+                    role,
+                    userId: data.user.id 
+                }));
             }
             signupForm.reset();
         }
@@ -221,12 +245,24 @@ if (signupForm) {
             formStatus.textContent = 'Logging in...';
             const email = loginForm.querySelector('#login-email').value;
             const password = loginForm.querySelector('#login-password').value;
-            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            const role = loginForm.querySelector('input[name="login-role"]:checked')?.value || 'student';
+            
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) {
                 formStatus.textContent = `Error: ${error.message}`;
                 formStatus.style.color = 'red';
             } else {
-                window.location.href = 'checkin.html'; // Redirect on success
+                // Update user role in session
+                await supabaseClient.auth.updateUser({
+                    data: { role: role }
+                });
+                
+                // Redirect based on role
+                if (role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
             }
         });
     }

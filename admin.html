@@ -43,7 +43,7 @@
                 
                 <!-- Logout Button -->
                 <div class="flex items-center space-x-4">
-                    <a href="./login.html" class="bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">
+                    <a href="./auth.html" class="bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition-colors">
                         Logout
                     </a>
                 </div>
@@ -212,7 +212,7 @@
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session || session.user.user_metadata?.role !== 'admin') {
-                    window.location.href = './login.html';
+                    window.location.href = './auth.html';
                     return;
                 }
 
@@ -262,7 +262,7 @@
         async function logout() {
             try {
                 await supabaseClient.auth.signOut();
-                window.location.href = './login.html';
+                window.location.href = './auth.html';
             } catch (error) {
                 console.error('Error logging out:', error);
             }
@@ -270,7 +270,7 @@
 
         // Update logout button
         document.addEventListener('DOMContentLoaded', function() {
-            const logoutButton = document.querySelector('a[href="./login.html"]');
+            const logoutButton = document.querySelector('a[href="./auth.html"]');
             if (logoutButton) {
                 logoutButton.onclick = function(e) {
                     e.preventDefault();

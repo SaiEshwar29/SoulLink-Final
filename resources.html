@@ -24,7 +24,7 @@
             font-family: 'Inter', sans-serif;
         }
     </style>
-</head>
+    </head>
 <body class="bg-slate-50 min-h-screen">
     <!-- Header -->
     <header class="sticky top-0 bg-white/80 backdrop-blur-md shadow-sm z-10">
@@ -44,7 +44,7 @@
                         Back to Dashboard
                     </button>
                 </div>
-            </div>
+        </div>
         </div>
     </header>
 
@@ -175,12 +175,12 @@
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (!session) {
-                    window.location.href = './login.html';
+                    window.location.href = './auth.html';
                     return;
                 }
             } catch (error) {
                 console.error('Error checking authentication:', error);
-                window.location.href = './login.html';
+                window.location.href = './auth.html';
             }
         });
 

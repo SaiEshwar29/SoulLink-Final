@@ -263,7 +263,7 @@
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 if (!user) {
-                    alert('Please log in to access your diary.');
+                    window.location.href = './auth.html';
                     return;
                 }
 
@@ -313,7 +313,7 @@
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 if (!user) {
-                    alert('Please log in to save your diary.');
+                    window.location.href = './auth.html';
                     return;
                 }
 
@@ -374,6 +374,7 @@
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 if (!user) {
+                    window.location.href = './auth.html';
                     return;
                 }
 
