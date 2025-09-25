@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoulLink - Aastha AI Companion</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-sky-600 rounded-full flex items-center justify-center">
+                        <i data-lucide="heart" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-slate-800">Aastha AI Companion</h1>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="clearChat()" class="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors flex items-center space-x-2">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <span>Clear</span>
+                    </button>
+                    <button onclick="closeAastha()" class="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Welcome Section -->
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 bg-gradient-to-br from-sky-400 to-sky-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="sparkles" class="w-10 h-10 text-white"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-slate-800 mb-2">Hello! I'm Aastha</h2>
+            <p class="text-slate-600">Your AI wellness companion. I'm here to listen, support, and guide you on your mental wellness journey.</p>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <!-- Chat Messages -->
+                <div id="chat-messages" class="h-96 overflow-y-auto p-6 space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-sky-600"></i>
+                        </div>
+                        <div class="bg-sky-50 rounded-lg p-3 max-w-xs">
+                            <p class="text-slate-800">Hi there! I'm Aastha, your AI wellness companion. How are you feeling today? I'm here to listen and help however I can.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="border-t border-slate-200 p-4">
+                    <div class="flex space-x-3">
+                        <input 
+                            type="text" 
+                            id="message-input" 
+                            placeholder="Type your message here..."
+                            class="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
+                            onkeypress="handleKeyPress(event)"
+                        >
+                        <button 
+                            onclick="sendMessage()" 
+                            class="bg-sky-600 text-white px-6 py-2 rounded-lg hover:bg-sky-700 transition-colors flex items-center space-x-2"
+                        >
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span>Send</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="max-w-4xl mx-auto mt-8">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button onclick="sendQuickMessage('I need help with anxiety')" class="bg-white border border-slate-300 rounded-lg p-4 hover:bg-slate-50 transition-colors text-left">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i data-lucide="heart" class="w-5 h-5 text-red-500"></i>
+                        <span class="font-medium text-slate-800">Anxiety Help</span>
+                    </div>
+                    <p class="text-sm text-slate-600">Get support for anxiety</p>
+                </button>
+                
+                <button onclick="sendQuickMessage('I feel depressed')" class="bg-white border border-slate-300 rounded-lg p-4 hover:bg-slate-50 transition-colors text-left">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i data-lucide="cloud-rain" class="w-5 h-5 text-blue-500"></i>
+                        <span class="font-medium text-slate-800">Depression</span>
+                    </div>
+                    <p class="text-sm text-slate-600">Support for depression</p>
+                </button>
+                
+                <button onclick="sendQuickMessage('I need motivation')" class="bg-white border border-slate-300 rounded-lg p-4 hover:bg-slate-50 transition-colors text-left">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i data-lucide="sun" class="w-5 h-5 text-yellow-500"></i>
+                        <span class="font-medium text-slate-800">Motivation</span>
+                    </div>
+                    <p class="text-sm text-slate-600">Get motivated</p>
+                </button>
+                
+                <button onclick="sendQuickMessage('I want to practice mindfulness')" class="bg-white border border-slate-300 rounded-lg p-4 hover:bg-slate-50 transition-colors text-left">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i data-lucide="leaf" class="w-5 h-5 text-green-500"></i>
+                        <span class="font-medium text-slate-800">Mindfulness</span>
+                    </div>
+                    <p class="text-sm text-slate-600">Practice mindfulness</p>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://qvocyxwvlazbvpdsppsa.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2b2N5eHd2bGF6YnZwZHNwcHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMDkzNDgsImV4cCI6MjA3Mzc4NTM0OH0.8EoOG5KMG4HYX4j2jrNOQnlJFzHJwfdAYF1D3Rj7dds';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Chat history
+        let chatHistory = [];
+
+        // Check authentication
+        window.addEventListener('load', async function() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) {
+                    window.location.href = './login.html';
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking authentication:', error);
+                window.location.href = './login.html';
+            }
+        });
+
+        // Send message
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addMessageToChat(message, 'user');
+            input.value = '';
+
+            // Show typing indicator
+            const typingId = addTypingIndicator();
+
+            try {
+                // Send to API
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        history: chatHistory
+                    })
+                });
+
+                // Remove typing indicator
+                removeTypingIndicator(typingId);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    addMessageToChat(data.response, 'assistant');
+                    
+                    // Update chat history
+                    chatHistory.push({ role: 'user', content: message });
+                    chatHistory.push({ role: 'assistant', content: data.response });
+                } else {
+                    addMessageToChat('I apologize, but I\'m having trouble responding right now. Please try again later.', 'assistant');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                removeTypingIndicator(typingId);
+                addMessageToChat('I apologize, but I\'m having trouble responding right now. Please try again later.', 'assistant');
+            }
+        }
+
+        // Send quick message
+        function sendQuickMessage(message) {
+            document.getElementById('message-input').value = message;
+            sendMessage();
+        }
+
+        // Add message to chat
+        function addMessageToChat(message, sender) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start space-x-3';
+            
+            if (sender === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex-1"></div>
+                    <div class="bg-sky-600 text-white rounded-lg p-3 max-w-xs">
+                        <p>${message}</p>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-sky-600"></i>
+                    </div>
+                    <div class="bg-sky-50 rounded-lg p-3 max-w-xs">
+                        <p class="text-slate-800">${message}</p>
+                    </div>
+                `;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Re-initialize icons
+            lucide.createIcons();
+        }
+
+        // Add typing indicator
+        function addTypingIndicator() {
+            const chatMessages = document.getElementById('chat-messages');
+            const typingDiv = document.createElement('div');
+            const typingId = 'typing-' + Date.now();
+            typingDiv.id = typingId;
+            typingDiv.className = 'flex items-start space-x-3';
+            typingDiv.innerHTML = `
+                <div class="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-sky-600"></i>
+                </div>
+                <div class="bg-sky-50 rounded-lg p-3">
+                    <div class="flex space-x-1">
+                        <div class="w-2 h-2 bg-sky-400 rounded-full animate-bounce"></div>
+                        <div class="w-2 h-2 bg-sky-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-2 h-2 bg-sky-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    </div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return typingId;
+        }
+
+        // Remove typing indicator
+        function removeTypingIndicator(typingId) {
+            const typingElement = document.getElementById(typingId);
+            if (typingElement) {
+                typingElement.remove();
+            }
+        }
+
+        // Handle Enter key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Clear chat
+        function clearChat() {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-sky-600"></i>
+                    </div>
+                    <div class="bg-sky-50 rounded-lg p-3 max-w-xs">
+                        <p class="text-slate-800">Hi there! I'm Aastha, your AI wellness companion. How are you feeling today? I'm here to listen and help however I can.</p>
+                    </div>
+                </div>
+            `;
+            chatHistory = [];
+            lucide.createIcons();
+        }
+
+        // Close Aastha
+        function closeAastha() {
+            window.close();
+        }
+    </script>
+</body>
+</html>

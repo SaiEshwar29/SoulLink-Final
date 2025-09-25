@@ -16,6 +16,9 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -79,6 +82,27 @@
                         Login
                     </button>
                 </form>
+
+                <!-- Google OAuth -->
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-slate-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-slate-500">Or continue with</span>
+                        </div>
+                    </div>
+                    <button onclick="signInWithGoogle()" class="mt-4 w-full bg-white border border-slate-300 text-slate-700 font-medium py-3 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>Continue with Google</span>
+                    </button>
+                </div>
 
                 <p class="text-center text-sm text-slate-500 mt-6">
                     Don't have an account? 
@@ -164,8 +188,29 @@
     </div>
 
     <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://qvocyxwvlazbvpdsppsa.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2b2N5eHd2bGF6YnZwZHNwcHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMDkzNDgsImV4cCI6MjA3Mzc4NTM0OH0.8EoOG5KMG4HYX4j2jrNOQnlJFzHJwfdAYF1D3Rj7dds';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
         // Initialize Lucide icons
         lucide.createIcons();
+
+        // Check if user is already logged in
+        window.addEventListener('load', async function() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                // User is already logged in, redirect to appropriate dashboard
+                const userRole = session.user.user_metadata?.role || 'student';
+                if (userRole === 'admin') {
+                    window.location.href = './admin.html';
+                } else {
+                    window.location.href = './dashboard.html';
+                }
+            }
+        });
 
         // Form visibility functions
         function showLogin() {
@@ -186,26 +231,74 @@
             document.getElementById('forgotPasswordForm').classList.remove('hidden');
         }
 
+        // Google OAuth Sign In
+        async function signInWithGoogle() {
+            try {
+                const role = document.querySelector('input[name="login-role"]:checked').value;
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/login.html',
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        }
+                    }
+                });
+
+                if (error) {
+                    console.error('Error signing in with Google:', error);
+                    alert('Error signing in with Google. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
         // Login form submission
-        document.getElementById('loginFormElement').addEventListener('submit', function(e) {
+        document.getElementById('loginFormElement').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const role = document.querySelector('input[name="login-role"]:checked').value;
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             
-            // Simulate login process
-            if (email && password) {
+            if (!email || !password) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    alert('Login failed: ' + error.message);
+                    return;
+                }
+
+                // Store user role in session
+                await supabaseClient.auth.updateUser({
+                    data: { role: role }
+                });
+
+                // Redirect based on role
                 if (role === 'admin') {
                     window.location.href = './admin.html';
                 } else {
                     window.location.href = './dashboard.html';
                 }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('An error occurred during login. Please try again.');
             }
         });
 
         // Signup form submission
-        document.getElementById('signupFormElement').addEventListener('submit', function(e) {
+        document.getElementById('signupFormElement').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const role = document.querySelector('input[name="signup-role"]:checked').value;
@@ -218,29 +311,76 @@
                 alert('Passwords do not match!');
                 return;
             }
-            
-            // Simulate signup process
-            if (name && email && password) {
-                if (role === 'student') {
-                    // Store user data for onboarding
-                    localStorage.setItem('newUser', JSON.stringify({ name, email, role }));
-                    window.location.href = './onboarding.html';
-                } else {
-                    // Admin signup goes directly to admin dashboard
-                    window.location.href = './admin.html';
+
+            if (!name || !email || !password) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: name,
+                            role: role
+                        }
+                    }
+                });
+
+                if (error) {
+                    alert('Signup failed: ' + error.message);
+                    return;
                 }
+
+                if (data.user) {
+                    // Store user data for onboarding
+                    localStorage.setItem('newUser', JSON.stringify({ 
+                        name, 
+                        email, 
+                        role,
+                        userId: data.user.id 
+                    }));
+
+                    if (role === 'student') {
+                        window.location.href = './onboarding.html';
+                    } else {
+                        window.location.href = './admin.html';
+                    }
+                }
+            } catch (error) {
+                console.error('Signup error:', error);
+                alert('An error occurred during signup. Please try again.');
             }
         });
 
         // Forgot password form submission
-        document.getElementById('forgotPasswordFormElement').addEventListener('submit', function(e) {
+        document.getElementById('forgotPasswordFormElement').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const email = document.getElementById('forgot-email').value;
             
-            if (email) {
+            if (!email) {
+                alert('Please enter your email address.');
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/login.html'
+                });
+
+                if (error) {
+                    alert('Error: ' + error.message);
+                    return;
+                }
+
                 alert('Password reset link sent to your email!');
                 showLogin();
+            } catch (error) {
+                console.error('Password reset error:', error);
+                alert('An error occurred. Please try again.');
             }
         });
     </script>

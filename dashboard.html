@@ -16,6 +16,9 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -170,6 +173,22 @@
                         <a href="#" class="font-bold text-sky-600 hover:text-sky-500">Track Mood</a>
                     </div>
                 </div>
+
+                <!-- Personal Diary -->
+                <div class="bg-white rounded-xl shadow-md p-6 flex flex-col hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-sky-100 text-sky-600 rounded-lg flex items-center justify-center">
+                            <i data-lucide="book-open" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow mt-4">
+                        <h3 class="text-xl font-bold text-slate-800">Personal Diary</h3>
+                        <p class="mt-2 text-slate-500">Write your thoughts and feelings in your private diary.</p>
+                    </div>
+                    <div class="mt-6">
+                        <button onclick="openDiary()" class="font-bold text-sky-600 hover:text-sky-500">Open Diary</button>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -186,25 +205,57 @@
     </footer>
 
     <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://qvocyxwvlazbvpdsppsa.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2b2N5eHd2bGF6YnZwZHNwcHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMDkzNDgsImV4cCI6MjA3Mzc4NTM0OH0.8EoOG5KMG4HYX4j2jrNOQnlJFzHJwfdAYF1D3Rj7dds';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
         // Initialize Lucide icons
         lucide.createIcons();
 
-        // Get user name from localStorage or set default
-        window.addEventListener('load', function() {
-            const newUser = localStorage.getItem('newUser');
-            if (newUser) {
-                const userData = JSON.parse(newUser);
-                document.getElementById('userName').textContent = userData.name.split(' ')[0];
-                // Clear the new user data after using it
+        // Check authentication and load user data
+        window.addEventListener('load', async function() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session) {
+                    window.location.href = './login.html';
+                    return;
+                }
+
+                // Get user name
+                const userName = session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User';
+                document.getElementById('userName').textContent = userName.split(' ')[0];
+
+                // Clear new user data if exists
                 localStorage.removeItem('newUser');
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                window.location.href = './login.html';
             }
         });
 
-        // Aastha function (placeholder for now)
+        // Aastha function
         function openAastha() {
-            alert('Aastha AI companion will open here. This would integrate with your existing Aastha app.');
-            // In a real implementation, this would open the Aastha chat interface
-            // window.open('./aastha.html', '_blank');
+            // Open Aastha in a new window/tab
+            window.open('./aastha.html', '_blank');
+        }
+
+        // Diary function
+        function openDiary() {
+            // Open diary in a new window/tab
+            window.open('./diary.html', '_blank');
+        }
+
+        // Logout function
+        async function logout() {
+            try {
+                await supabaseClient.auth.signOut();
+                window.location.href = './login.html';
+            } catch (error) {
+                console.error('Error logging out:', error);
+            }
         }
 
         // Add click handlers for other features
@@ -222,6 +273,15 @@
                     }
                 });
             });
+
+            // Update logout button to use the logout function
+            const logoutButton = document.querySelector('a[href="./login.html"]');
+            if (logoutButton) {
+                logoutButton.onclick = function(e) {
+                    e.preventDefault();
+                    logout();
+                };
+            }
         });
     </script>
 </body>

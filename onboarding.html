@@ -16,6 +16,9 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -328,6 +331,13 @@
     </div>
 
     <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://qvocyxwvlazbvpdsppsa.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2b2N5eHd2bGF6YnZwZHNwcHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMDkzNDgsImV4cCI6MjA3Mzc4NTM0OH0.8EoOG5KMG4HYX4j2jrNOQnlJFzHJwfdAYF1D3Rj7dds';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
         // Handle radio button selection styling
         document.querySelectorAll('input[type="radio"]').forEach(radio => {
             radio.addEventListener('change', function() {
@@ -345,7 +355,7 @@
             });
         });
 
-        function generateReport() {
+        async function generateReport() {
             // Check if all questions are answered
             const form = document.getElementById('wellnessForm');
             const formData = new FormData(form);
@@ -365,6 +375,44 @@
             const anxietyScore = answers.slice(0, 7).reduce((sum, answer) => sum + answer, 0);
             const depressionScore = answers.slice(7).reduce((sum, answer) => sum + answer, 0);
 
+            // Get user data
+            const newUser = localStorage.getItem('newUser');
+            let userData = null;
+            if (newUser) {
+                userData = JSON.parse(newUser);
+            }
+
+            // Store wellness assessment in database
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                const userId = user?.id || userData?.userId;
+
+                if (userId) {
+                    const { error } = await supabaseClient
+                        .from('wellness_assessments')
+                        .insert([
+                            {
+                                user_id: userId,
+                                total_score: totalScore,
+                                anxiety_score: anxietyScore,
+                                depression_score: depressionScore,
+                                answers: answers,
+                                assessment_date: new Date().toISOString(),
+                                interpretation: getInterpretation(totalScore),
+                                recommendations: getRecommendations(totalScore)
+                            }
+                        ]);
+
+                    if (error) {
+                        console.error('Error saving assessment:', error);
+                    } else {
+                        console.log('Wellness assessment saved successfully');
+                    }
+                }
+            } catch (error) {
+                console.error('Error saving to database:', error);
+            }
+
             // Show report section
             document.getElementById('questionnaireSection').classList.add('hidden');
             document.getElementById('reportSection').classList.remove('hidden');
@@ -373,47 +421,52 @@
             document.getElementById('overallScore').textContent = totalScore;
 
             // Generate interpretation
-            let interpretation = '';
-            if (totalScore <= 4) {
-                interpretation = 'Minimal anxiety and depression symptoms. You\'re doing well!';
-            } else if (totalScore <= 9) {
-                interpretation = 'Mild anxiety and depression symptoms. Consider self-care strategies.';
-            } else if (totalScore <= 14) {
-                interpretation = 'Moderate anxiety and depression symptoms. Professional support may be helpful.';
-            } else {
-                interpretation = 'Severe anxiety and depression symptoms. Please consider reaching out for professional help.';
-            }
+            const interpretation = getInterpretation(totalScore);
             document.getElementById('scoreInterpretation').textContent = interpretation;
 
             // Generate recommendations based on score
             const recommendationsList = document.getElementById('recommendations');
-            recommendationsList.innerHTML = '';
-            
-            if (totalScore <= 4) {
-                recommendationsList.innerHTML = `
+            recommendationsList.innerHTML = getRecommendations(totalScore);
+
+            // Create chart
+            createWellnessChart(anxietyScore, depressionScore, totalScore);
+        }
+
+        function getInterpretation(score) {
+            if (score <= 4) {
+                return 'Minimal anxiety and depression symptoms. You\'re doing well!';
+            } else if (score <= 9) {
+                return 'Mild anxiety and depression symptoms. Consider self-care strategies.';
+            } else if (score <= 14) {
+                return 'Moderate anxiety and depression symptoms. Professional support may be helpful.';
+            } else {
+                return 'Severe anxiety and depression symptoms. Please consider reaching out for professional help.';
+            }
+        }
+
+        function getRecommendations(score) {
+            if (score <= 4) {
+                return `
                     <li>• Continue your current wellness practices</li>
                     <li>• Maintain regular exercise and healthy eating</li>
                     <li>• Stay connected with your support network</li>
                     <li>• Consider helping others in your community</li>
                 `;
-            } else if (totalScore <= 9) {
-                recommendationsList.innerHTML = `
+            } else if (score <= 9) {
+                return `
                     <li>• Practice daily mindfulness or meditation</li>
                     <li>• Maintain a consistent sleep schedule</li>
                     <li>• Take regular breaks throughout your day</li>
                     <li>• Consider talking to a counselor or therapist</li>
                 `;
             } else {
-                recommendationsList.innerHTML = `
+                return `
                     <li>• Please consider reaching out to a mental health professional</li>
                     <li>• Practice self-compassion and be patient with yourself</li>
                     <li>• Maintain basic self-care routines</li>
                     <li>• Connect with trusted friends or family members</li>
                 `;
             }
-
-            // Create chart
-            createWellnessChart(anxietyScore, depressionScore, totalScore);
         }
 
         function createWellnessChart(anxietyScore, depressionScore, totalScore) {

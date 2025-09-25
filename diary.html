@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoulLink - Personal Diary</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .diary-page {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        .diary-content {
+            background: #fefefe;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            position: relative;
+        }
+        .diary-content::before {
+            content: '';
+            position: absolute;
+            left: 40px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #ef4444;
+        }
+        .diary-line {
+            background: repeating-linear-gradient(
+                transparent,
+                transparent 24px,
+                #e5e7eb 24px,
+                #e5e7eb 25px
+            );
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="diary-page">
+    <!-- Header -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-sky-600 rounded-full flex items-center justify-center">
+                        <i data-lucide="book-open" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-slate-800">Personal Diary</h1>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex items-center space-x-4">
+                    <button onclick="saveEntry()" class="bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors flex items-center space-x-2">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>Save</span>
+                    </button>
+                    <button onclick="loadEntries()" class="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors flex items-center space-x-2">
+                        <i data-lucide="folder-open" class="w-4 h-4"></i>
+                        <span>Load</span>
+                    </button>
+                    <button onclick="closeDiary()" class="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Date Selector -->
+        <div class="mb-6">
+            <div class="flex items-center space-x-4">
+                <label for="diary-date" class="text-sm font-medium text-slate-700">Date:</label>
+                <input type="date" id="diary-date" class="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <button onclick="loadEntryForDate()" class="bg-sky-100 text-sky-700 px-3 py-2 rounded-lg hover:bg-sky-200 transition-colors text-sm">
+                    Load Entry
+                </button>
+            </div>
+        </div>
+
+        <!-- Diary Entry -->
+        <div class="diary-content">
+            <div class="p-8">
+                <div class="diary-line">
+                    <div class="pl-12">
+                        <h2 id="entry-date" class="text-2xl font-bold text-slate-800 mb-6">Today's Entry</h2>
+                        <div class="space-y-4">
+                            <p class="text-slate-600 text-lg leading-relaxed">Dear Diary,</p>
+                            <textarea 
+                                id="diary-text" 
+                                placeholder="Write your thoughts, feelings, and experiences here..."
+                                class="w-full min-h-[400px] p-4 border-0 bg-transparent text-slate-800 text-lg leading-relaxed resize-none focus:outline-none"
+                                style="font-family: 'Inter', sans-serif; line-height: 1.8;"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Previous Entries -->
+        <div class="mt-8">
+            <h3 class="text-xl font-bold text-slate-800 mb-4">Previous Entries</h3>
+            <div id="entries-list" class="space-y-3">
+                <!-- Entries will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://qvocyxwvlazbvpdsppsa.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2b2N5eHd2bGF6YnZwZHNwcHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyMDkzNDgsImV4cCI6MjA3Mzc4NTM0OH0.8EoOG5KMG4HYX4j2jrNOQnlJFzHJwfdAYF1D3Rj7dds';
+        
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Set today's date
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('diary-date').value = today;
+            document.getElementById('entry-date').textContent = formatDate(new Date());
+            
+            // Load today's entry if it exists
+            loadEntryForDate();
+            loadEntries();
+        });
+
+        // Format date for display
+        function formatDate(date) {
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Load entry for selected date
+        async function loadEntryForDate() {
+            const selectedDate = document.getElementById('diary-date').value;
+            if (!selectedDate) return;
+
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    alert('Please log in to access your diary.');
+                    return;
+                }
+
+                const { data, error } = await supabaseClient
+                    .from('diary_entries')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('entry_date', selectedDate)
+                    .single();
+
+                if (error && error.code !== 'PGRST116') {
+                    console.error('Error loading entry:', error);
+                    return;
+                }
+
+                if (data) {
+                    document.getElementById('diary-text').value = data.content;
+                } else {
+                    document.getElementById('diary-text').value = '';
+                }
+
+                // Update the display date
+                const date = new Date(selectedDate);
+                document.getElementById('entry-date').textContent = formatDate(date);
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Save diary entry
+        async function saveEntry() {
+            const selectedDate = document.getElementById('diary-date').value;
+            const content = document.getElementById('diary-text').value;
+
+            if (!selectedDate) {
+                alert('Please select a date.');
+                return;
+            }
+
+            if (!content.trim()) {
+                alert('Please write something before saving.');
+                return;
+            }
+
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    alert('Please log in to save your diary.');
+                    return;
+                }
+
+                // Check if entry already exists
+                const { data: existingEntry } = await supabaseClient
+                    .from('diary_entries')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .eq('entry_date', selectedDate)
+                    .single();
+
+                if (existingEntry) {
+                    // Update existing entry
+                    const { error } = await supabaseClient
+                        .from('diary_entries')
+                        .update({ 
+                            content: content,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', existingEntry.id);
+
+                    if (error) {
+                        console.error('Error updating entry:', error);
+                        alert('Error updating entry. Please try again.');
+                        return;
+                    }
+                } else {
+                    // Create new entry
+                    const { error } = await supabaseClient
+                        .from('diary_entries')
+                        .insert([
+                            {
+                                user_id: user.id,
+                                entry_date: selectedDate,
+                                content: content,
+                                created_at: new Date().toISOString()
+                            }
+                        ]);
+
+                    if (error) {
+                        console.error('Error creating entry:', error);
+                        alert('Error saving entry. Please try again.');
+                        return;
+                    }
+                }
+
+                alert('Diary entry saved successfully!');
+                loadEntries(); // Refresh the entries list
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        // Load all entries
+        async function loadEntries() {
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) {
+                    return;
+                }
+
+                const { data, error } = await supabaseClient
+                    .from('diary_entries')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .order('entry_date', { ascending: false })
+                    .limit(10);
+
+                if (error) {
+                    console.error('Error loading entries:', error);
+                    return;
+                }
+
+                const entriesList = document.getElementById('entries-list');
+                entriesList.innerHTML = '';
+
+                if (data && data.length > 0) {
+                    data.forEach(entry => {
+                        const entryElement = document.createElement('div');
+                        entryElement.className = 'bg-white rounded-lg p-4 shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer';
+                        entryElement.onclick = () => {
+                            document.getElementById('diary-date').value = entry.entry_date;
+                            loadEntryForDate();
+                        };
+
+                        const date = new Date(entry.entry_date);
+                        const preview = entry.content.substring(0, 100) + (entry.content.length > 100 ? '...' : '');
+
+                        entryElement.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-slate-800">${formatDate(date)}</h4>
+                                    <p class="text-slate-600 text-sm mt-1">${preview}</p>
+                                </div>
+                                <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400"></i>
+                            </div>
+                        `;
+
+                        entriesList.appendChild(entryElement);
+                    });
+                } else {
+                    entriesList.innerHTML = '<p class="text-slate-500 text-center py-8">No diary entries yet. Start writing your first entry!</p>';
+                }
+
+                // Re-initialize icons for new elements
+                lucide.createIcons();
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Close diary
+        function closeDiary() {
+            window.close();
+        }
+
+        // Auto-save functionality (optional)
+        let autoSaveTimeout;
+        document.getElementById('diary-text').addEventListener('input', function() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                // Auto-save after 30 seconds of inactivity
+                if (this.value.trim()) {
+                    saveEntry();
+                }
+            }, 30000);
+        });
+    </script>
+</body>
+</html>
