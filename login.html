@@ -200,15 +200,20 @@
 
         // Check if user is already logged in
         window.addEventListener('load', async function() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                // User is already logged in, redirect to appropriate dashboard
-                const userRole = session.user.user_metadata?.role || 'student';
-                if (userRole === 'admin') {
-                    window.location.href = './admin.html';
-                } else {
-                    window.location.href = './dashboard.html';
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    // User is already logged in, redirect to appropriate dashboard
+                    const userRole = session.user.user_metadata?.role || 'student';
+                    if (userRole === 'admin') {
+                        window.location.href = './admin.html';
+                    } else {
+                        window.location.href = './dashboard.html';
+                    }
                 }
+            } catch (error) {
+                console.error('Error checking session:', error);
+                // Continue with login page if there's an error
             }
         });
 
